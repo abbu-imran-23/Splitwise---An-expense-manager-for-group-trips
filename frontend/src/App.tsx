@@ -1,8 +1,19 @@
-import React from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Auth from './pages/Auth';
+import Home from './pages/Home';
 
 const App = () => {
   return (
-    <div className='text-3xl text-center text-green-700'>Splitwise Frontend</div>
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path='/' element={<Auth/>}/>
+          <Route path='/login' element={<Auth/>}/>
+          <Route path='/register' element={<Auth/>}/>
+          <Route path='/home' element={<Home/>}/>
+        </Routes>
+      </BrowserRouter>
+    </>
   )
 }
 
