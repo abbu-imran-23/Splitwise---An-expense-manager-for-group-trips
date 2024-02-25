@@ -1,5 +1,5 @@
 export interface AuthFormData {
     name?: string,
-    email: string,
-    password: string
+    email?: string,
+    password?: string
 }

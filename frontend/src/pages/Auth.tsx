@@ -1,63 +1,138 @@
 import { useState } from "react";
+import { AUTH_TYPES } from "../constants/AuthTypes";
+import { AuthInputs } from "../constants/AuthInputs";
 import Input from "../components/Input";
 import Button from "../components/Button";
-import { AuthInputs } from "../constants/AuthInputs";
-import { useNavigate } from "react-router-dom";
-import { AUTH_TYPES } from "../constants/AuthTypes";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AuthFormData } from "../interfaces/AuthFormData";
+import axios from "axios";
+import { AUTH_ENDPOINTS } from "../services/ApiEndpoints";
+import toast from "react-hot-toast";
 
 const Auth = () => {
 
-  const [authType, setAuthType] = useState(AUTH_TYPES.LOGIN);
-  const [authFormData, setAuthFormData] = useState<AuthFormData>({
-    email: "",
-    password: "",
-  });
+  const location = useLocation();
+
+  const [authType, setAuthType] = useState<string>(
+    location.pathname === "/login" ?
+    AUTH_TYPES.LOGIN :
+    AUTH_TYPES.REGISTER
+  );
+
+  const [authFormData, setAuthFormData] = useState<AuthFormData>(
+    location.pathname === "/login" ?
+    {
+      email: "",
+      password: ""
+    }
+    :
+    {
+      name: "",
+      email: "",
+      password: ""
+    }
+  )
+
+  const [loading, setIsLoading] = useState<boolean>(false);
+  
+  console.log(authType);
 
   const navigate = useNavigate();
 
-  const navigateToRegisterPage = () => {
-    if (authType === AUTH_TYPES.LOGIN) {
+  const switchAuthPage = () => {
+    if(authType === AUTH_TYPES.LOGIN) {
       navigate("/register");
       setAuthType(AUTH_TYPES.REGISTER);
       setAuthFormData({
         name: "",
         email: "",
-        password: "",
-      });
-    } else {
+        password: ""
+      })
+    }
+    else {
       navigate("/login");
       setAuthType(AUTH_TYPES.LOGIN);
       setAuthFormData({
         email: "",
-        password: "",
-      });
+        password: ""
+      })
     }
-  };
+  }
 
   const handleInputChange = (name: string, value: string) => {
     setAuthFormData((prevAuthFormData) => ({
       ...prevAuthFormData,
-      [name]: value,
-    }));
-  };
+      [name]: value
+    }))
+  }
 
-  const handleAuthFormSubmit: React.FormEventHandler<HTMLFormElement> = (
-    event
-  ) => {
+  const handleAuthFormSubmit: React.FocusEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
     console.log(authFormData);
-    if (authType === AUTH_TYPES.REGISTER) {
-      navigate("/login");
-      setAuthType(AUTH_TYPES.LOGIN);
-      setAuthFormData({
-        email: "",
-        password: "",
-      });
-    } else {
-      navigate("/home");
+    if(authType === AUTH_TYPES.REGISTER) {
+
+      setIsLoading(true);
+      loading ?? toast.loading("loading....");
+      axios.post(AUTH_ENDPOINTS.SIGNUP_API, authFormData) 
+      .then((response) => {
+        if(response.data.success) {
+          toast.success("Registered successfully");
+          navigate("/login");
+          setAuthType(AUTH_TYPES.LOGIN);
+          setAuthFormData({
+            email: "",
+            password: ""
+          })
+        }
+        else {
+          console.log(response.data.message);
+        }
+      })
+      .catch((error) => {
+        console.log("Error while calling Register API ");
+        console.log(error);
+        if(!error.response.data.success) {
+          setAuthFormData({
+            name: authFormData.name,
+            email: "",
+            password: ""
+          })
+          console.log(error.response.data.message);
+          toast.error(error.response.data.message);
+        }
+      })
+      setIsLoading(false);
     }
-  };
+    else {
+      
+      setIsLoading(true);
+      loading ?? toast.loading("loading...");
+      axios.post(AUTH_ENDPOINTS.LOGIN_API, authFormData)
+      .then((response) => {
+        console.log(response.data);
+        if(response.data.success) {
+          toast.success("Login successfull");
+          navigate("/home");
+        }
+        else {
+          console.log(response.data.message);
+        }
+      })
+      .catch((error) => {
+        console.log("Error while calling login API");
+        console.log(error);
+        if(!error.response.data.success) {
+          setAuthFormData({
+            email: authFormData.email,
+            password: ""
+        })
+        console.log(error.response.data.message);
+        toast.error(error.response.data.message);
+        }
+      })
+      setIsLoading(false);
+    }
+  }
 
   return (
     <>
@@ -70,53 +145,58 @@ const Auth = () => {
           </h4>
           <form onSubmit={handleAuthFormSubmit}>
             <div className="flex flex-col gap-5">
-              {authType === AUTH_TYPES.REGISTER ? (
-                <Input
-                  label="Name"
-                  type="text"
-                  name="name"
-                  id="name"
-                  value={authFormData.name || ""}
-                  getInputValue={(value) => {
-                    handleInputChange("name", value);
-                  }}
-                />
-              ) : (
-                ""
-              )}
-              {AuthInputs.map((inputType, index) => {
+
+            {
+              authType === AUTH_TYPES.REGISTER ?
+              <Input
+              label="Name"
+              type="text"
+              name="name"
+              id="name"
+              value={authFormData.name || " "}
+              getInputValue={(value) => {
+                handleInputChange("name", value)
+              }}
+              /> : <></>
+            }
+            {
+              AuthInputs.map((input, index) => {
                 return (
                   <Input
-                    key={index}
-                    label={inputType.label}
-                    type={inputType.type}
-                    name={inputType.name}
-                    id={inputType.id}
-                    value={
-                      authFormData[inputType.name as keyof AuthFormData] || ""
-                    }
-                    getInputValue={(value) => {
-                      handleInputChange(inputType.name, value);
-                    }}
+                  key={index}
+                  label={input.label}
+                  type={input.type}
+                  name={input.name}
+                  id={input.id}
+                  value={authFormData[input.id as keyof AuthFormData] || ""}
+                  getInputValue={(value) => {
+                    handleInputChange(input.id, value);
+                  }}
                   />
-                );
-              })}
+                )
+              })
+            }
+
             </div>
             <div className="flex justify-center">
-              <Button
-                type={authType === AUTH_TYPES.LOGIN ? "Login" : "Register"}
-              />
+              <Button type={authType === AUTH_TYPES.LOGIN ? "Login" : "Register"}/>
             </div>
           </form>
           <h5 className="text-white text-center text-[1.15rem] text-opacity-85">
-            {authType === AUTH_TYPES.LOGIN
-              ? "Don't have account, create "
-              : "Already have account, "}
+            {
+              authType === AUTH_TYPES.LOGIN ?
+              "Don't have account, create " : 
+              "Already have account "
+            }
             <span
-              onClick={navigateToRegisterPage}
-              className="text-green-600 hover:text-green-500  font-semibold cursor-pointer"
+            onClick={switchAuthPage}
+            className="text-green-600 hover:text-green-500  font-semibold cursor-pointer"
             >
-              {authType === AUTH_TYPES.LOGIN ? "new account" : "login"}
+            {
+              authType === AUTH_TYPES.LOGIN ?
+              "new account" :
+              "login"
+            }
             </span>
           </h5>
         </div>
