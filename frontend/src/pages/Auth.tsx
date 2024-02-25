@@ -72,7 +72,7 @@ const Auth = () => {
     if(authType === AUTH_TYPES.REGISTER) {
 
       setIsLoading(true);
-      loading ?? toast.loading("loading....");
+      loading ?? toast.loading("loading...");
       axios.post(AUTH_ENDPOINTS.SIGNUP_API, authFormData) 
       .then((response) => {
         if(response.data.success) {

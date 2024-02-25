@@ -7,7 +7,8 @@ const App = () => {
   return (
     <>
       <Toaster
-      position='top-center'/>
+      position='top-center'
+      />
       <BrowserRouter>
         <Routes>
           <Route path='/login' element={<Auth/>}/>
