@@ -1,11 +1,14 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 
-export const ApiConnector: any =  (method: string, url: string, body: any, headers?: any, params?: string) => {
-    return axios({
-        method: `${method}`,
-        url: `${url}`,
-        data: body ? body: null,
-        headers: headers ? headers: null,
-        params: params ? params: null
-    })
-}
+export const apiConnector = async (method:any, url: any, data?: any) => {
+    try {
+        const response: AxiosResponse = await axios({
+            method: method,
+            url: url,
+            data: data
+        });
+        return response;
+    } catch (error) {
+        return error;
+    } 
+};
