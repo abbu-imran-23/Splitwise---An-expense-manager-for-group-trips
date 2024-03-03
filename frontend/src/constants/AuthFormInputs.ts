@@ -1,4 +1,4 @@
-export const AuthInputs = [
+export const AuthFormInputs = [
     {
         label: "Email",
         type: "text",

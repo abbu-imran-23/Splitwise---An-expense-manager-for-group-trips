@@ -2,6 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import dbConnect from "./configs/dbConnect";
 import AuthRoutes from "./routes/Auth";
+import TripRoutes from "./routes/Trip";
+import ExpenseRoutes from "./routes/Expense";
 import cors from "cors";
 
 const app = express();
@@ -31,3 +33,5 @@ app.listen(PORT, () => {
 dbConnect();
 
 app.use("/auth", AuthRoutes);
+app.use("/trip", TripRoutes);
+app.use("/expense", ExpenseRoutes);

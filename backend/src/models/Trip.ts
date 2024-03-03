@@ -1,34 +1,31 @@
 import mongoose from "mongoose";
 
-const UserSchema = new mongoose.Schema(
+const TripSchema = new mongoose.Schema(
     {
-        name: {
+        tripName: {
             type: String,
             required: true
         },
-        email: {
-            type: String,
+        tripCreatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
             required: true,
+            ref: "User"
         },
-        password: {
-            type: String,
-            required: true
-        },
-        trips: [
+        tripMates: [
             {
                 type: mongoose.Schema.Types.ObjectId,
                 required: true,
-                ref: "Trip"
+                ref: "User"
             }
         ],
-        acceptedPaymentTypes: [
+        tripExpenses: [
             {
                 type: mongoose.Schema.Types.ObjectId,
                 required: true,
-                ref: "PaymentType"
+                ref: "Expense"
             }
         ]
     }
 )
 
-export default mongoose.model("User", UserSchema);
+export default mongoose.model("Trip", TripSchema);

@@ -129,13 +129,13 @@ const login = async (req: Request, res:Response) => {
 
             // Options for cookie
             const options = {
-                expires: new Date(Date.now() + 15000),
+                expires: new Date(Date.now() + 1000 * 60 * 60),
                 httpOnly: true,
                 secure: true
             }
 
             // Send token in cookie
-            return res.cookie("auth-token", token, options).status(200).json({
+            return res.cookie("authToken", token, options).status(200).json({
                 success: true,
                 token: token,
                 user: user,

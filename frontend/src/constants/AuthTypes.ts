@@ -1,4 +1,4 @@
-export const AUTH_TYPES = {
-    LOGIN: "login",
-    REGISTER: "register"
+export enum AUTH_TYPES  {
+    LOGIN = "login",
+    REGISTER = "register"
 }

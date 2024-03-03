@@ -1,5 +1,4 @@
 import { AUTH_TYPES } from "../constants/AuthTypes";
-import { AuthInputs } from "../constants/AuthInputs";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -9,22 +8,23 @@ import toast from "react-hot-toast";
 import { HTTP_METHODS } from "../constants/HttpMethods";
 import { apiConnector } from "../services/apiConnector";
 import React from "react";
+import { AuthFormInputs } from "../constants/AuthFormInputs";
 
 const Auth = () => {
   const location = useLocation();
 
   const [authType, setAuthType] = React.useState<string>(
-    location.pathname === "/login" ? AUTH_TYPES.LOGIN : AUTH_TYPES.REGISTER
+    location.pathname === "/register" ? AUTH_TYPES.REGISTER : AUTH_TYPES.LOGIN
   );
 
   const [authFormData, setAuthFormData] = React.useState<AuthFormData>(
-    location.pathname === "/login"
+    location.pathname === "/register"
       ? {
+          name: "",
           email: "",
           password: "",
         }
       : {
-          name: "",
           email: "",
           password: "",
         }
@@ -103,7 +103,7 @@ const Auth = () => {
 
     if (response && response.data?.success) {
       toast.success("Login successfull");
-      navigate("/home");
+      navigate("/dashboard");
     } else {
       if (response && !response.response?.data?.success) {
         setAuthFormData({
@@ -152,7 +152,7 @@ const Auth = () => {
                 <></>
               )}
 
-              {AuthInputs.map((input, index) => {
+              {AuthFormInputs.map((input, index) => {
                 return (
                   <Input
                     key={index}
