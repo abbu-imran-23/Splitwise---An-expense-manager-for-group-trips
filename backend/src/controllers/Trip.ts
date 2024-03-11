@@ -1,51 +1,153 @@
 import { Request, Response } from "express";
 import Trip from "../models/Trip";
 import User from "../models/User";
+import Expense from "../models/Expense";
 
+// Create Trip
 const createTrip = async (req: Request, res: Response) => {
     try {
         // Parse Trip Details from req body
-        const { tripName, tripCreatedBy, tripMates, tripExpenses } = req.body;
+        const { tripName, tripCreater, tripMates, tripExpenses } = req.body;
 
         // Handle if any field is not entered by the trip creater
-        if(!tripName || !tripCreatedBy || !tripMates) {
+        if(!tripName || !tripCreater || !tripMates) {
             return res.status(400).json({
                 success: false,
                 message: "Please enter all the fields"
             })
         }
 
+        tripMates.push(tripCreater);
+
         // Create Trip
         const trip = await Trip.create({
             tripName,
-            tripCreatedBy,
+            tripCreater,
             tripMates,
             tripExpenses
         })
 
-        const tripDetails = await Trip.findById(trip._id).populate("tripCreatedBy");
-        await tripDetails?.populate("tripMates");
-        // await tripDetails?.populate("tripExpenses");
-
-        await User.findByIdAndUpdate(tripDetails?.tripCreatedBy._id, {
-            $push: {
-                trips: tripDetails
-            }
-        }, { new: true });
-
-        tripDetails?.tripMates.forEach(async (tripMate) => {
-            await User.findByIdAndUpdate(tripMate._id, {
+        // Push Trip in TripMates's Trips Array
+        tripMates.forEach(async (tripMate: any) => {
+            await User.findByIdAndUpdate(tripMate, {
                 $push: {
-                    trips: tripDetails
+                    trips: trip
                 }
-            }, { new: true })
+            })
         })
 
         // Return Success Flag
         return res.status(200).json({
             success: true,
             message: "Trip created successfully",
-            data: tripDetails
+            data: trip
+        })
+
+    } catch (error) {
+        // Send Failure flag
+        res.status(500).json({
+            success: false,
+            error: error,
+            message: "Internal Server Error in create trip"
+        })
+    }
+}
+
+// Delete Trip
+const deleteTrip = async(req: Request, res: Response) => {
+    try {
+        // Parse tripId from req.params;
+        const { tripId } = req.params;
+
+        // Handle if tripId is not passed
+        if(!tripId) {
+            return res.status(400).json({
+                success: false,
+                message: "TripId is missing"
+            })
+        }
+        
+        // Find trip from DB
+        const isTripExist = await Trip.findById(tripId);
+
+        // Handle if trip doesnot exist in DB
+        if(!isTripExist) {
+            return res.status(404).json({
+                success: false,
+                message: "Trip not found"
+            })
+        }
+
+        // Pull the trip from tripMates
+        for (const tripMate of isTripExist.tripMates) {
+            await User.findByIdAndUpdate(tripMate, {
+                $pull: { trips: tripId }
+            });
+        }
+
+        // Remove expense related to the trip
+        await Expense.deleteMany({ _id: { $in: isTripExist.tripExpenses } });
+
+        // Delete trip
+        await Trip.findByIdAndDelete(tripId);
+
+        // Success flag
+        return res.status(200).json({
+            success: true,
+            message: "Trip deleted successfully"
+        })
+        
+    } catch (error) {
+        // Send Failure flag
+        res.status(500).json({
+            success: false,
+            error: error,
+            message: "Internal Server Error in create trip"
+        })
+    }
+}
+
+// Add TripMate to the Trip
+const addTripMate = async (req: Request, res: Response) => {
+    try {
+        // Parse tripId and userId from req.body
+        const { tripId, tripMateId } = req.params;
+        
+        // Handle if any field is not entered 
+        if(!tripId || !tripMateId) {
+            return res.status(400).json({
+                success: false,
+                message: "Please enter all the fields"
+            })
+        }
+
+        // Add user to the trip
+        const updatedTrip = await Trip.findByIdAndUpdate(tripId, {
+            $push: {
+                tripMates: tripMateId
+            }
+        }, { new: true }).populate("tripMates");
+
+        // Push trip to the tripMate's Trips Array
+        await User.findByIdAndUpdate(tripMateId, {
+            $push: {
+                trips: updatedTrip
+            }
+        })
+
+        // Handle if tripId not found
+        if(!updatedTrip) {
+            return res.status(404).json({
+                success: false,
+                message: "Trip not found"
+            })
+        }
+
+        // Success Flag
+        return res.status(200).json({
+            success: true,
+            message: "Trip mate added succcessfully",
+            data: updatedTrip
         })
 
     } catch (error) {
@@ -58,4 +160,57 @@ const createTrip = async (req: Request, res: Response) => {
     }
 }
 
-export { createTrip };
+// Remove TripMate from Trip
+const removeTripMate = async (req: Request, res: Response) => {
+    try {
+        // Parse tripId and userId from req.body
+        const { tripId, tripMateId } = req.params;
+        
+        // Handle if any field is not entered 
+        if(!tripId || !tripMateId) {
+            return res.status(400).json({
+                success: false,
+                message: "Please enter all the fields"
+            })
+        }
+
+        // Remove user from the trip
+        const updatedTrip = await Trip.findByIdAndUpdate(tripId, {
+            $pull: {
+                tripMates: tripMateId
+            }
+        }, { new: true }).populate("tripMates");
+
+        // Pull trip from the tripMate's Trips Array
+        await User.findByIdAndUpdate(tripMateId, {
+            $pull: {
+                trips: tripId
+            }
+        })
+
+        // Handle if tripId not found
+        if(!updatedTrip) {
+            return res.status(404).json({
+                success: false,
+                message: "Trip not found"
+            })
+        }
+
+        // Success Flag
+        return res.status(200).json({
+            success: true,
+            message: "Trip mate removed succcessfully",
+            data: updatedTrip
+        })
+
+    } catch (error) {
+        // Send Failure flag
+        res.status(500).json({
+            success: false,
+            error: error,
+            message: "Internal Server Error"
+        })
+    }
+}
+
+export { createTrip, deleteTrip, addTripMate, removeTripMate };

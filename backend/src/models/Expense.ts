@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const ExpenseSchema = new mongoose.Schema(
     {
-        tripName: {
+        trip: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
             ref: "Trip"
@@ -16,11 +16,11 @@ const ExpenseSchema = new mongoose.Schema(
             required: true,
             ref: "User"
         },
-        totalAmount: {
+        amountSpent: {
             type: Number,
             required: true
         },
-        amountTobePaidByEachTripMate: {
+        amountTobePaidByEachExpenseMate: {
             type: Number,
             required: true
         },
@@ -33,7 +33,7 @@ const ExpenseSchema = new mongoose.Schema(
         ],
         paymentStatus: {
             type: Boolean,
-            require: true,
+            required: true,
             default: false
         }
     }

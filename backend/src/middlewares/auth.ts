@@ -6,7 +6,11 @@ import dotenv from "dotenv";
 dotenv.config();
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || "";
 
-const auth = async (req: Request, res: Response, next: NextFunction) => {
+interface RequestWithUser extends Request {
+	user?: JWT.JwtPayload | string;
+}
+
+const auth = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
         // Extracting JWT from request cookies, body or header
 		const token =
@@ -25,9 +29,8 @@ const auth = async (req: Request, res: Response, next: NextFunction) => {
         try {
 			// Verifying the JWT using the secret key stored in environment variables
 			const decode = JWT.verify(token, JWT_SECRET_KEY);
-			console.log(decode);
 			// Storing the decoded JWT payload in the request object for further use
-			// req.user = decode;
+			req.user = decode;
 		} catch (error) {
 			// If JWT verification fails, return 401 Unauthorized response
 			return res.status(401).json({ 

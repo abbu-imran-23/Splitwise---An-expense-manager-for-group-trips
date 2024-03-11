@@ -21,11 +21,25 @@ const UserSchema = new mongoose.Schema(
                 ref: "Trip"
             }
         ],
-        acceptedPaymentTypes: [
+        acceptedPaymentMethods: [
             {
                 type: mongoose.Schema.Types.ObjectId,
                 required: true,
-                ref: "PaymentType"
+                ref: "PaymentMethod"
+            }
+        ],
+        paymentsToBePaid: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                required: true,
+                ref: "Expense"
+            }
+        ],
+        paymentsToBeRecieved: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                required: true,
+                ref: "Expense"
             }
         ]
     }

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const PaymentType = new mongoose.Schema(
+const PaymentMethod = new mongoose.Schema(
     {
         paymentName: {
             type: String,
@@ -13,4 +13,4 @@ const PaymentType = new mongoose.Schema(
     }
 )
 
-export default mongoose.model("PaymentType", PaymentType);
+export default mongoose.model("PaymentMethod", PaymentMethod);

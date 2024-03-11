@@ -6,7 +6,7 @@ const TripSchema = new mongoose.Schema(
             type: String,
             required: true
         },
-        tripCreatedBy: {
+        tripCreater: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
             ref: "User"
