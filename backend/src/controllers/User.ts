@@ -6,14 +6,6 @@ const getUserDetails = async (req: Request, res: Response) => {
         // Parse userId
         const { userId } = req.params;
 
-        // Handle if userId is not passed
-        if(!userId) {
-            return res.status(400).json({
-                success: false,
-                message: "userId is missing in params"
-            })
-        }
-
         // Check if the user exist
         const user = await User.findById(userId).populate(["trips", "paymentsToBePaid", "paymentsToBeRecieved", "acceptedPaymentMethods"]);
 
@@ -24,6 +16,9 @@ const getUserDetails = async (req: Request, res: Response) => {
                 message: "User not found"
             })
         }
+
+        // Make password ""
+        user.password = "";
 
         // Success flag
         return res.status(200).json({
@@ -42,4 +37,34 @@ const getUserDetails = async (req: Request, res: Response) => {
     }
 }
 
-export { getUserDetails }
+const getAllUserDetails = async (req: Request, res: Response) => {
+    try {
+        // Fetch all users
+        const users = await User.find();
+        console.log(users);
+
+        if(!users) {
+            res.status(404).json({
+                success: false,
+                message: "No Users found",
+            })
+        }
+
+        // Success flag
+        return res.status(200).json({
+            success: true,
+            message: "User details fetched successfully",
+            data: users
+        })
+
+    } catch (error) {
+        // Send Failure flag
+        res.status(500).json({
+            success: false,
+            error: error,
+            message: "Internal Server Error"
+        })
+    }
+}
+
+export { getUserDetails, getAllUserDetails }

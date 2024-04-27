@@ -7,10 +7,11 @@ import Expense from "../models/Expense";
 const createTrip = async (req: Request, res: Response) => {
     try {
         // Parse Trip Details from req body
-        const { tripName, tripCreater, tripMates, tripExpenses } = req.body;
+        const { tripName, userId, tripMates, tripExpenses } = req.body;
 
+        const tripCreater = userId;
         // Handle if any field is not entered by the trip creater
-        if(!tripName || !tripCreater || !tripMates) {
+        if(!tripName || !tripCreater || !tripMates || !tripExpenses) {
             return res.status(400).json({
                 success: false,
                 message: "Please enter all the fields"
@@ -213,4 +214,62 @@ const removeTripMate = async (req: Request, res: Response) => {
     }
 }
 
-export { createTrip, deleteTrip, addTripMate, removeTripMate };
+// Update Trip
+const updateTripName = async (req: Request, res: Response) => {
+    try {
+        // Parse tripId from req.params
+        const { tripId } = req.params;
+
+        // Parse updated tripName
+        const { tripName } = req.body;
+        
+        // Handle if tripId is missing 
+        if(!tripId) {
+            return res.status(400).json({
+                success: false,
+                message: "tripId is missing in params"
+            })
+        }
+
+        // Handle if tripName is not passed 
+        if(!tripName) {
+            return res.status(400).json({
+                success: false,
+                message: "tripName is missing in body"
+            })
+        }
+
+        // Find trip from DB
+        const trip = await Trip.findById(tripId);
+
+        // Handle if trip doesnot exist in DB
+        if(!trip) {
+            return res.status(404).json({
+                success: false,
+                message: "Trip not found"
+            })
+        }
+
+        // Update Trip Name
+        const updtaedTripName = await Trip.findByIdAndUpdate(tripId, {
+            tripName: tripName
+        }, { new: true });
+
+        // Success Flag
+        return res.status(200).json({
+            success: true,
+            message: "Trip Name updtaed succcessfully",
+            data: updtaedTripName
+        })
+
+    } catch (error) {
+        // Send Failure flag
+        res.status(500).json({
+            success: false,
+            error: error,
+            message: "Internal Server Error"
+        })
+    }
+}
+
+export { createTrip, deleteTrip, addTripMate, removeTripMate, updateTripName };

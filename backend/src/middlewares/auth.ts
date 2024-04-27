@@ -1,13 +1,13 @@
 import { NextFunction } from "express";
 import { Request, Response } from "express";
-import JWT from "jsonwebtoken";
+import JWT, { JwtPayload } from "jsonwebtoken";
 import dotenv from "dotenv";
 
 dotenv.config();
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || "";
 
 interface RequestWithUser extends Request {
-	user?: JWT.JwtPayload | string;
+	user?: JWT.JwtPayload
 }
 
 const auth = async (req: RequestWithUser, res: Response, next: NextFunction) => {
@@ -17,6 +17,8 @@ const auth = async (req: RequestWithUser, res: Response, next: NextFunction) => 
         req.cookies.authToken ||
         req.body.authToken ||
         req.header("Authorization")?.replace("Bearer ", "");
+
+		console.log(token);
 
         // If JWT is missing, return 401 Unauthorized response
 		if (!token) {
@@ -28,7 +30,7 @@ const auth = async (req: RequestWithUser, res: Response, next: NextFunction) => 
 
         try {
 			// Verifying the JWT using the secret key stored in environment variables
-			const decode = JWT.verify(token, JWT_SECRET_KEY);
+			const decode = JWT.verify(token, JWT_SECRET_KEY) as JwtPayload;
 			// Storing the decoded JWT payload in the request object for further use
 			req.user = decode;
 		} catch (error) {
@@ -50,5 +52,6 @@ const auth = async (req: RequestWithUser, res: Response, next: NextFunction) => 
 		});
     }
 }
+
 
 export { auth };

@@ -4,9 +4,12 @@ import dbConnect from "./configs/dbConnect";
 import AuthRoutes from "./routes/Auth";
 import TripRoutes from "./routes/Trip";
 import ExpenseRoutes from "./routes/Expense";
-import PaymentRoutes from "./routes/PaymentMethods";
+import PaymentMethodRoutes from "./routes/PaymentMethods";
+import PaymentRoutes from "./routes/Payment";
 import UserRoutes from "./routes/User";
 import cors from "cors";
+import { auth } from "./middlewares/auth";
+import { isAuthorized } from "./middlewares/isAuthorized";
 
 const app = express();
 
@@ -38,4 +41,5 @@ app.use("/auth", AuthRoutes);
 app.use("/trip", TripRoutes);
 app.use("/expense", ExpenseRoutes);
 app.use("/user", UserRoutes);
+app.use("/paymentMethod", PaymentMethodRoutes);
 app.use("/payment", PaymentRoutes);

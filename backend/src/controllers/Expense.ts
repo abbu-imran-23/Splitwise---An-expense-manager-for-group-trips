@@ -121,4 +121,184 @@ const updateExpense = async (req: Request, res: Response) => {
     }
 }
 
-export { createExpense, updateExpense }
+// Add Expense Mate
+const addExpenseMate = async (req: Request, res: Response) => {
+    try {
+
+        // Parse expenseId
+        // /:expenseId/trip/:tripId/addExpenseMate/:tripMateId
+        const { tripId, expenseId, tripMateId } = req.params;
+
+        // Handle if expenseId is not passed
+        if(!tripId || !expenseId || !tripMateId) {
+            return res.status(404).json({
+                success: false,
+                message: "Please send all the required params"
+            })
+        }
+
+        // Check whether the tripMate is in trip
+        const trip = await Trip.findOne({ _id: tripId, tripMates: tripMateId });
+
+        // Check if trip exists
+        if (!trip) {
+            return res.status(404).json({
+                success: false,
+                message: "Trip not found or trip mate not found in the trip"
+            });
+        }
+
+        // Add tripMate to the Expense
+        const expense = await Expense.findOne({ _id: expenseId, trip: tripId });
+
+        // Handle if expense not found
+        if (!expense) {
+            return res.status(404).json({
+                success: false,
+                message: "Expense not found"
+            });
+        }
+
+        // Check if expenseMate is already present in the expense
+        const isExpenseMatePresent = await Expense.findOne({ _id: expenseId, amountOwedBy: tripMateId });
+
+        if(isExpenseMatePresent) {
+            return res.status(409).json({
+                success: false,
+                message: "ExpenseMate is alreday present"
+            })
+        }
+
+        // If not present, add expenseMate
+        const expenseDetails = await Expense.findByIdAndUpdate(expenseId, {
+            $push: {
+                amountOwedBy: tripMateId
+            }
+        }, { new: true });
+
+        if (!expenseDetails) {
+            return res.status(404).json({
+                success: false,
+                message: "Expense details not found"
+            });
+        }
+
+        const amountSpent = expenseDetails?.amountSpent;
+        const amountOwedBy = expenseDetails?.amountOwedBy.length;
+
+        const amountTobePaidByEachExpenseMate = amountSpent / (amountOwedBy + 1);
+        
+        const updatedExpense = await Expense.findByIdAndUpdate(expenseId, {
+            amountTobePaidByEachExpenseMate: amountTobePaidByEachExpenseMate
+        }, { new: true })
+
+        // Add the expense to the expenseMate's paymentsToBePaid array
+        await User.findByIdAndUpdate(tripMateId, {
+            $push: {
+                paymentsToBePaid: updatedExpense
+            }
+        }) 
+
+        // Success flag
+        return res.status(200).json({
+            success: true,
+            message: "ExpenseMate added successfully",
+            data: updatedExpense
+        })
+
+    } catch (error) {
+        // Send Failure flag
+        res.status(500).json({
+            success: false,
+            error: error,
+            message: "Internal Server Error"
+        })
+    }
+}
+
+// Remove Expense Mate
+const removeExpenseMate = async (req: Request, res: Response) => {
+    try {
+
+        // Parse detials
+        const { tripId, expenseId, tripMateId } = req.params;
+
+        // Handle if expenseId is not passed
+        if(!tripId || !expenseId || !tripMateId) {
+            return res.status(404).json({
+                success: false,
+                message: "Please send all the required params"
+            })
+        }
+
+        // Check whether the tripMate is in trip
+        const trip = await Trip.findOne({ _id: tripId, tripMates: tripMateId });
+
+        // Check if trip exists
+        if (!trip) {
+            return res.status(404).json({
+                success: false,
+                message: "Trip not found or trip mate not found in the trip"
+            });
+        }
+
+        // Add tripMate to the Expense
+        const expense = await Expense.findOne({ _id: expenseId, trip: tripId});
+
+        // Check if expense exists
+        if (!expense) {
+            return res.status(404).json({
+                success: false,
+                message: "Expense not found"
+            });
+        }
+
+        // If expenseMate is present in Expense, remove expenseMate
+        const expenseDetails = await Expense.findOneAndUpdate({ _id: expenseId, amountOwedBy: tripMateId }, {
+            $pull: {
+                amountOwedBy: tripMateId
+            }
+        }, { new: true });
+
+        // Check if expense exists
+        if (!expenseDetails) {
+            return res.status(404).json({
+                success: false,
+                message: "Expense with expenseMate not found"
+            });
+        }
+
+        // Pull Expense from expenseMate's paymentsToBePaid array
+        await User.findByIdAndUpdate(tripMateId, {
+            $pull: {
+                paymentsToBePaid: expenseDetails._id
+            }
+        })
+
+        const amountSpent = expenseDetails?.amountSpent;
+        const amountOwedBy = expenseDetails?.amountOwedBy.length;
+
+        const amountTobePaidByEachExpenseMate = amountSpent / (amountOwedBy + 1);
+        
+        const updatedExpense = await Expense.findByIdAndUpdate(expenseId, {
+            amountTobePaidByEachExpenseMate: amountTobePaidByEachExpenseMate
+        }, { new: true })
+
+        // Success flag
+        return res.status(200).json({
+            success: true,
+            message: "ExpenseMate removed successfully",
+            data: updatedExpense
+        })
+
+    } catch (error) {
+        // Send Failure flag
+        res.status(500).json({
+            success: false,
+            error: error,
+            message: "Internal Server Error"
+        })
+    }
+}
+
+export { createExpense, updateExpense, addExpenseMate, removeExpenseMate }

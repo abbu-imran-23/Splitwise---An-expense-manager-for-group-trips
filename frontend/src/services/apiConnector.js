@@ -1,8 +1,8 @@
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 
-export const apiConnector = async (method:any, url: any, data?: any) => {
+export const apiConnector = async (method, url, data) => {
     try {
-        const response: AxiosResponse = await axios({
+        const response = await axios({
             method: method,
             url: url,
             data: data

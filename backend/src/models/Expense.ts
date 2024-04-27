@@ -31,7 +31,7 @@ const ExpenseSchema = new mongoose.Schema(
                 ref: "User"
             }
         ],
-        paymentStatus: {
+        paidByAll: {
             type: Boolean,
             required: true,
             default: false

@@ -1,7 +1,6 @@
 import React from "react";
-import { ButtonProps } from "../interfaces/ButtonProps";
 
-const Button: React.FC<ButtonProps> = ({ type }) => {
+const Button = ({ type }) => {
   return (
     <button
     type="submit"

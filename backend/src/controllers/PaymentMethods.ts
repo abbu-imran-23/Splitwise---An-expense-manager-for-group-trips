@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import PaymentMethod from "../models/PaymentType"
+import PaymentMethod from "../models/PaymentMethod"
 import User from "../models/User";
 
 // Add Payment Method
@@ -7,14 +7,6 @@ const addPaymentMethod = async(req: Request, res: Response) => {
     try {
         // Parse userId from req params
         const { userId } = req.params;
-
-        // Hnadle if userId is not passed
-        if(!userId) {
-            return res.status(404).json({
-                success: false,
-                message: "userId is missing in params"
-            })
-        }
 
         // Parse payment methods
         const { paymentName, paymentNumber } = req.body;
@@ -28,7 +20,7 @@ const addPaymentMethod = async(req: Request, res: Response) => {
         }
 
         // Handle if the payment details already exist
-        const paymentDetails = await PaymentMethod.findOne({ paymentName });
+        const paymentDetails = await PaymentMethod.findOne({ paymentName, paymentNumber });
 
         if(paymentDetails) {
             return res.status(409).json({
@@ -70,16 +62,8 @@ const addPaymentMethod = async(req: Request, res: Response) => {
 // Update Payment Method
 const updatePaymentMethod = async(req: Request, res: Response) => {
     try {
-        // Parse userId from req params
-        const { userId } = req.params;
-
-        // Hnadle if userId is not passed
-        if(!userId) {
-            return res.status(404).json({
-                success: false,
-                message: "userId is missing in params"
-            })
-        }
+        // Parse paymentMethodId
+        const { paymentMethodId } = req.params;
         
         // Parse payment methods
         const { paymentName, paymentNumber } = req.body;
@@ -93,7 +77,7 @@ const updatePaymentMethod = async(req: Request, res: Response) => {
         }
 
         // Handle if the payment details already exist
-        const paymentDetails = await PaymentMethod.findOne({ paymentName: paymentName });
+        const paymentDetails = await PaymentMethod.findById(paymentMethodId);
 
         if(!paymentDetails) {
             return res.status(404).json({
@@ -103,7 +87,7 @@ const updatePaymentMethod = async(req: Request, res: Response) => {
         }
 
         // Create Payment Method
-        const payment = await PaymentMethod.findOneAndUpdate({paymentName}, {
+        const payment = await PaymentMethod.findByIdAndUpdate(paymentMethodId, {
             paymentName,
             paymentNumber
         }, { new: true })

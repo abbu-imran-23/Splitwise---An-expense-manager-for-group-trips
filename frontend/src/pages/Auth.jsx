@@ -2,22 +2,21 @@ import { AUTH_TYPES } from "../constants/AuthTypes";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AuthFormData } from "../interfaces/AuthFormData";
 import { AUTH_ENDPOINTS } from "../services/ApiEndpoints";
 import toast from "react-hot-toast";
 import { HTTP_METHODS } from "../constants/HttpMethods";
 import { apiConnector } from "../services/apiConnector";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AuthFormInputs } from "../constants/AuthFormInputs";
 
 const Auth = () => {
   const location = useLocation();
 
-  const [authType, setAuthType] = React.useState<string>(
+  const [authType, setAuthType] = useState(
     location.pathname === "/register" ? AUTH_TYPES.REGISTER : AUTH_TYPES.LOGIN
   );
 
-  const [authFormData, setAuthFormData] = React.useState<AuthFormData>(
+  const [authFormData, setAuthFormData] = useState(
     location.pathname === "/register"
       ? {
           name: "",
@@ -30,7 +29,8 @@ const Auth = () => {
         }
   );
 
-  const [loading, setIsLoading] = React.useState<boolean>(false);
+  const [loading, setIsLoading] = useState(false);
+  const [apiResponse, setApiResponse] = useState({});
 
   const navigate = useNavigate();
 
@@ -53,70 +53,106 @@ const Auth = () => {
     }
   };
 
-  const handleInputChange = (name: string, value: string) => {
+  const handleInputChange = (name, value) => {
     setAuthFormData((prevAuthFormData) => ({
       ...prevAuthFormData,
       [name]: value,
     }));
   };
 
-  const register = async () => {
-    setIsLoading(true);
-    loading ?? toast.loading("loading...");
-
-    const response: any = await apiConnector(
-      HTTP_METHODS.POST,
-      AUTH_ENDPOINTS.SIGNUP_API,
-      authFormData
-    );
-
-    if (response && response.data?.success) {
-      toast.success("Registered successfully");
-      navigate("/login");
-      setAuthType(AUTH_TYPES.LOGIN);
-      setAuthFormData({
-        email: "",
-        password: "",
-      });
+  useEffect(() => {
+    if (authType === AUTH_TYPES.LOGIN) {
+      if (apiResponse.success) {
+        toast.success("Login successful");
+        localStorage.setItem("authToken", apiResponse.authToken);
+        apiResponse.data.authToken = apiResponse.authToken;
+        localStorage.setItem("user", JSON.stringify(apiResponse.data));
+        const userId = apiResponse.data._id;
+        navigate(`/dashboard/${userId}`);
+      } else {
+        if (!apiResponse.success) {
+          setAuthFormData({
+            email: authFormData.email,
+            password: "",
+          });
+          if (apiResponse.message) {
+            toast.error(apiResponse.message);
+          }
+        }
+      }
     } else {
-      if (response && !response.response.data.success) {
+      if (apiResponse.success) {
+        toast.success("Registered successfully");
+        navigate("/login");
+        setAuthType(AUTH_TYPES.LOGIN);
         setAuthFormData({
-          name: authFormData.name,
           email: "",
           password: "",
         });
-        toast.error(response.response.data.message);
+      } else {
+        if (!apiResponse.success) {
+          setAuthFormData({
+            name: authFormData.name,
+            email: "",
+            password: "",
+          });
+          if (apiResponse.message) {
+            toast.error(apiResponse.message);
+          }
+        }
       }
     }
-    setIsLoading(false);
+  }, [apiResponse]);
+
+  const setApiResponseData = (response) => {
+    if (response && response.data) {
+      setApiResponse(response.data);
+    } else if (response && response.response.data) {
+      setApiResponse(response.response.data);
+    }
+  }
+
+  const register = async () => {
+    try {
+      setIsLoading(true);
+      loading ?? toast.loading("loading...");
+
+      const response = await apiConnector(
+        HTTP_METHODS.POST,
+        AUTH_ENDPOINTS.SIGNUP_API,
+        authFormData
+      );
+
+      setApiResponseData(response);
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error occurred while registering:", error);
+      toast.error("An error occurred while registering. Please try again later.");
+    }
   };
 
   const login = async () => {
     setIsLoading(true);
     loading ?? toast.loading("loading...");
 
-    const response: any = await apiConnector(
-      HTTP_METHODS.POST,
-      AUTH_ENDPOINTS.LOGIN_API,
-      authFormData
-    );
+    try {
+      const response = await apiConnector(
+        HTTP_METHODS.POST,
+        AUTH_ENDPOINTS.LOGIN_API,
+        authFormData
+      );
 
-    if (response && response.data?.success) {
-      toast.success("Login successfull");
-      navigate("/dashboard");
-    } else {
-      if (response && !response.response?.data?.success) {
-        setAuthFormData({
-          email: authFormData.email,
-          password: "",
-        });
-        toast.error(response.response.data.message);
-      }
+      setApiResponseData(response);
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error occurred during login:", error);
+      toast.error("An error occurred during login. Please try again later.");
     }
-    setIsLoading(false);
   };
 
-  const handleAuthFormSubmit: React.FocusEventHandler<HTMLFormElement> = (
+  const handleAuthFormSubmit = (
     event
   ) => {
     event.preventDefault();
@@ -160,7 +196,7 @@ const Auth = () => {
                     type={input.type}
                     name={input.name}
                     id={input.id}
-                    value={authFormData[input.id as keyof AuthFormData] || ""}
+                    value={authFormData[input.id]}
                     getInputValue={(value) => {
                       handleInputChange(input.id, value);
                     }}

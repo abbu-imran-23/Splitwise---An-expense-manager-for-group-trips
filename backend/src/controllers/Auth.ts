@@ -47,6 +47,9 @@ const register = async (req: Request, res: Response) => {
                 password: hashedPassword
             })
 
+            // Make password ""
+            user.password = ""
+
             // Send Success flag
             res.status(200).json({
                 success: true,
@@ -95,7 +98,7 @@ const login = async (req: Request, res:Response) => {
         }
 
         // Check if the user exist with the given email
-        const userExist = await User.findOne({ email });
+        const userExist = await User.findOne({ email }).populate("trips");
 
         if(!userExist) {
             return res.status(404).json({
@@ -137,9 +140,9 @@ const login = async (req: Request, res:Response) => {
             // Send token in cookie
             return res.cookie("authToken", token, options).status(200).json({
                 success: true,
-                token: token,
-                user: user,
-                message: "Login Successful"
+                authToken: token,
+                data: user,
+                message: "Login Successfull"
             })
         }
 

@@ -33,13 +33,20 @@ const UserSchema = new mongoose.Schema(
                 type: mongoose.Schema.Types.ObjectId,
                 required: true,
                 ref: "Expense"
-            }
+            },
         ],
         paymentsToBeRecieved: [
             {
                 type: mongoose.Schema.Types.ObjectId,
                 required: true,
                 ref: "Expense"
+            }
+        ],
+        paymentHistory: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                required: true,
+                ref: "Payment"
             }
         ]
     }

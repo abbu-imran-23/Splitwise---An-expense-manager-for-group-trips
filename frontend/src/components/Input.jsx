@@ -1,9 +1,8 @@
-import React, { ChangeEventHandler } from "react";
-import { AuthInputProps } from "../interfaces/AuthInputProps";
+import React from "react";
 
-const Input: React.FC<AuthInputProps> = ({ label, type, name, id, value, getInputValue }) => {
+const Input = ({ label, type, name, id, value, getInputValue }) => {
 
-    const sendInputValue: ChangeEventHandler<HTMLInputElement> = (event) => {
+    const sendInputValue = (event) => {
         getInputValue(event.target.value);
     }
 
